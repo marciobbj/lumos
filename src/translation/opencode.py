@@ -21,7 +21,12 @@ INSTRUCTION_TEMPLATE = (
     "Translate the following text to {target_language}. "
     "Return ONLY the translated text, with no additional commentary, "
     "explanations, or notes. "
-    "Preserve the original formatting and paragraph structure.\n\n"
+    "Preserve the original formatting and paragraph structure. "
+    "Pay close attention to cohesion and coherence: the translation must read "
+    "as natural, fluent {target_language} — sentences must connect logically, "
+    "ideas must flow clearly, and the meaning of the original must be fully preserved. "
+    "Do not translate word-for-word if it produces unnatural or confusing results; "
+    "prefer idiomatic phrasing that conveys the same meaning.\n\n"
     "Text to translate:\n@{path}"
 )
 
