@@ -43,7 +43,10 @@ Ensure the following are installed on your system:
    brew install poppler
    ```
 
-3. **Python 3.12.2** (managed via pyenv)
+3. **opencode** (for AI translation capabilities)
+   - Install and configure opencode CLI as per its documentation.
+
+4. **Python**
    ```bash
    pyenv install 3.12.2
    ```
