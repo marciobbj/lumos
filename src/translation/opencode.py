@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 import json
 import shutil
+import tempfile
+import os
 
 from src.translation.base import TranslationBackend, TranslationResult
 from src.translation.config import OpenCodeConfig
@@ -65,28 +67,44 @@ class OpenCodeBackend(TranslationBackend):
 
         logger.info("[INFO] Sending translation prompt to OpenCode CLI (model: %s)", self._config.model)
         start_time = time.perf_counter()
-        proc = await asyncio.create_subprocess_exec(
-            "opencode",
-            "run",
-            "--format",
-            "json",
-            "-m",
-            self._config.model,
-            prompt,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
+
+        # Write prompt to a temp file so large pages aren't passed as a CLI arg
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            suffix=".txt",
+            prefix="lumos_translate_",
+            delete=False,
+            encoding="utf-8",
+        ) as tmp:
+            tmp.write(prompt)
+            tmp_path = tmp.name
+
+        proc: asyncio.subprocess.Process | None = None
         try:
+            proc = await asyncio.create_subprocess_exec(
+                "opencode",
+                "run",
+                "--format",
+                "json",
+                "-m",
+                self._config.model,
+                f"@{tmp_path}",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
             stdout_bytes, stderr_bytes = await asyncio.wait_for(
                 proc.communicate(),
                 timeout=self._config.timeout,
             )
         except asyncio.TimeoutError:
-            proc.kill()
-            await proc.wait()
+            if proc is not None:
+                proc.kill()
+                await proc.wait()
             raise RuntimeError(
                 f"opencode CLI timed out after {self._config.timeout}s"
             ) from None
+        finally:
+            os.unlink(tmp_path)
 
         if proc.returncode != 0:
             stderr_text = stderr_bytes.decode(errors="replace").strip()
