@@ -106,7 +106,7 @@ The desktop application will launch in a new Flet window.
 ### 💡 Tips for Large Documents
 
 - Use **Pause** to stop a long run and continue later — progress is saved after every page.
-- For very large documents, consider splitting the PDF into chapters before creating a project. Smaller chunks are easier to review incrementally and recover from errors.
+- For very large documents, consider splitting the PDF into chapters before creating a project. Smaller chunks are easier to review incrementally and recover from possible errors.
 
 ## Project Structure
 
