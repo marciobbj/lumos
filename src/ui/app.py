@@ -336,18 +336,30 @@ class OCRApp:
                 self.page.update()
 
                 backend = self._create_translation_backend()
-                t_result = await backend.translate(
-                    self._ocr_result.text,
-                    target_language=(
-                        self._target_language.value or "Portuguese"
-                    ),
-                )
-                self._translated_text = t_result.translated_text
-                self._translation_text_field.value = self._translated_text
-                self._translation_char_count.value = (
-                    f"{len(self._translated_text):,} characters"
-                )
-                self._btn_save_translation.disabled = False
+                target_lang = self._target_language.value or "Portuguese"
+
+                pages = self._ocr_result.pages
+                translated_parts: list[str] = []
+
+                for i, page_text in enumerate(pages, 1):
+                    self._set_status(f"Translating page {i}/{len(pages)}...")
+                    self._progress_bar.value = (i - 1) / len(pages)
+                    self.page.update()
+
+                    page_result = await backend.translate(
+                        page_text,
+                        target_language=target_lang,
+                    )
+                    translated_parts.append(page_result.translated_text)
+
+                    # Show partial results as they arrive
+                    self._translated_text = "\n\n".join(translated_parts)
+                    self._translation_text_field.value = self._translated_text
+                    self._translation_char_count.value = (
+                        f"{len(self._translated_text):,} characters"
+                    )
+                    self._btn_save_translation.disabled = False
+                    self.page.update()
 
             self._set_status("Done!")
             self._progress_bar.value = 1.0
