@@ -1,0 +1,20 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="90" fill="#1A237E"/>
+  
+  <!-- Lightbulb Base -->
+  <path d="M100 150V160M90 155H110" stroke="#FFD600" stroke-width="6" stroke-linecap="round"/>
+  <rect x="85" y="160" width="30" height="10" rx="2" fill="#FFD600"/>
+  
+  <!-- Lightbulb Body (Stylized) -->
+  <path d="M100 40C70 40 55 65 55 85C55 105 70 120 80 130C85 135 85 145 85 150H115C115 145 115 135 120 130C130 120 145 105 145 85C145 65 130 40 100 40Z" fill="#FFFFFF" stroke="#FFD600" stroke-width="4"/>
+  
+  <!-- Document Icon inside Lightbulb -->
+  <rect x="88" y="70" width="24" height="30" rx="2" fill="#1A237E"/>
+  <line x1="92" y1="78" x2="108" y2="78" stroke="#FFFFFF" stroke-width="2"/>
+  <line x1="92" y1="84" x2="108" y2="84" stroke="#FFFFFF" stroke-width="2"/>
+  <line x1="92" y1="90" x2="100" y2="90" stroke="#FFFFFF" stroke-width="2"/>
+  
+  <!-- Glowing Spark/Ray -->
+  <path d="M100 15V25M160 40L150 50M185 100H175M160 160L150 150M40 160L50 150M15 100H25M40 40L50 50" stroke="#FFD600" stroke-width="4" stroke-linecap="round"/>
+</svg>
