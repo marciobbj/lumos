@@ -13,7 +13,7 @@
 - **Project browser** — the home screen lists all projects with their current status, progress, and last-updated time. Create, open, or delete projects from one place.
 - **OCR extraction** — converts PDF pages to images via Poppler and runs Tesseract OCR. Supports Portuguese, English, French, German, and Spanish (individually or combined).
 - **AI translation** — translates the extracted text page by page using either a local [LM Studio](https://lmstudio.ai/) server or the OpenCode CLI. Partial results are streamed to the UI as each page completes.
-- **Pause and resume** — pause an OCR or translation run at any time. Progress is saved to disk page by page (`output/<project>/pages/`), so resuming skips already-completed pages.
+- **Pause and resume** — pause an OCR or translation run at any time. Progress is saved to disk page by page (`pages/` for OCR, `translation_pages/` for translation), so resuming skips already-completed pages.
 - **Live preview** — OCR and translation results appear in the UI as each page is processed, without waiting for the full document to finish.
 - **Auto-save** — results are written to `output/<project>/ocr.txt` and `output/<project>/translation.txt` automatically as processing proceeds.
 
@@ -126,7 +126,10 @@ lumos/
         ├── project.json        # Metadata and progress state
         ├── ocr.txt             # Full OCR result
         ├── translation.txt     # Full translation result
-        └── pages/              # Per-page OCR cache (used for resume)
+        ├── pages/              # Per-page OCR cache (used for resume)
+        │   ├── page_0000.txt
+        │   └── ...
+        └── translation_pages/  # Per-page translation cache (used for resume)
             ├── page_0000.txt
             └── ...
 ```

@@ -182,6 +182,24 @@ class Project:
         pages = sorted(self.ocr_pages_dir.glob("page_*.txt"))
         return [p.read_text(encoding="utf-8") for p in pages]
 
+    @property
+    def translation_pages_dir(self) -> Path:
+        """Directory where individual page translation results are cached."""
+        return self.folder / "translation_pages"
+
+    def save_translation_page(self, page_index: int, text: str) -> None:
+        """Save a single translated page result to disk."""
+        self.translation_pages_dir.mkdir(parents=True, exist_ok=True)
+        page_path = self.translation_pages_dir / f"page_{page_index:04d}.txt"
+        page_path.write_text(text, encoding="utf-8")
+
+    def load_translation_pages(self) -> list[str]:
+        """Load all cached translation page results, sorted by page index."""
+        if not self.translation_pages_dir.exists():
+            return []
+        pages = sorted(self.translation_pages_dir.glob("page_*.txt"))
+        return [p.read_text(encoding="utf-8") for p in pages]
+
     def save_ocr_result(self, text: str) -> None:
         """Save full OCR result text."""
         self.ocr_path.write_text(text, encoding="utf-8")
