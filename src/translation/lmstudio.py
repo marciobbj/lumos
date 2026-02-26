@@ -14,7 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-11#YT|TRANSLATION_PROMPT = """\
+TRANSLATION_PROMPT = """\
 
 Translate the following text to {target_language}. \
 Return ONLY the translated text, with no additional commentary, explanations, or notes.
@@ -78,27 +78,6 @@ class LMStudioBackend(TranslationBackend):
 
         duration = time.perf_counter() - start_time
         logger.info("[INFO] Received response from LM Studio in %.2fs", duration)
-        translated = response.choices[0].message.content
-
-            target_language=target_language,
-            text=text,
-        )
-
-        response = await self._client.chat.completions.create(
-            model=self._config.model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a professional translator. "
-                        "Return ONLY the translation, nothing else."
-                    ),
-                },
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.3,
-        )
-
         translated = response.choices[0].message.content
         if translated is None:
             raise RuntimeError(

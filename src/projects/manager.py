@@ -105,6 +105,8 @@ class Project:
     translation_backend: str = "lmstudio"
     translation_lmstudio_url: str = "http://localhost:1234/v1"
     translation_lmstudio_model: str = "local-model"
+    translation_opencode_model: str = "github-copilot/gpt-5-mini"
+
 
     # Error
     error_message: str = ""

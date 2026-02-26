@@ -151,6 +151,54 @@ class OCRApp:
             visible=(self._project.translation_backend == "lmstudio"),
         )
 
+        # ── OpenCode settings ─────────────────────────────────────────
+        self._opencode_models_all: list[str] = []  # full list from `opencode models`
+        self._opencode_model_search = ft.TextField(
+            label="Search model...",
+            hint_text="Type to filter (e.g. claude, gpt, gemini)",
+            prefix_icon=ft.Icons.SEARCH,
+            on_change=self._on_opencode_model_search,
+            on_focus=self._on_opencode_search_focus,
+            on_blur=self._on_opencode_search_blur,
+            width=420,
+        )
+        self._opencode_model_list = ft.ListView(
+            height=160,
+            spacing=0,
+        )
+        self._opencode_model_container = ft.Container(
+            content=self._opencode_model_list,
+            border=ft.border.all(1, "#E0E0E0"),
+            border_radius=6,
+            padding=ft.padding.symmetric(vertical=4),
+            width=420,
+            visible=False,
+        )
+        self._opencode_selected_label = ft.Text(
+            value=f"Selected: {self._project.translation_opencode_model}",
+            size=12,
+            color="#1976D2",
+            weight=ft.FontWeight.W_500,
+        )
+        self._opencode_loading = ft.Row(
+            [
+                ft.ProgressRing(width=14, height=14, stroke_width=2),
+                ft.Text("Loading models...", size=12, color="#757575"),
+            ],
+            spacing=8,
+            visible=False,
+        )
+        self._opencode_settings = ft.Column(
+            [
+                self._opencode_loading,
+                self._opencode_model_search,
+                self._opencode_model_container,
+                self._opencode_selected_label,
+            ],
+            spacing=6,
+            visible=(self._project.translation_backend == "opencode"),
+        )
+
         settings_card = ft.Card(
             content=ft.Container(
                 content=ft.Column(
@@ -165,7 +213,9 @@ class OCRApp:
                             vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
                         self._lmstudio_settings,
+                        self._opencode_settings,
                     ],
+
                     spacing=10,
                 ),
                 padding=15,
@@ -330,6 +380,10 @@ class OCRApp:
         self._refresh_action_buttons()
         self.page.update()
 
+        # If backend is already opencode, pre-load models list
+        if self._project.translation_backend == "opencode":
+            asyncio.ensure_future(self._load_opencode_models())
+
     def _refresh_action_buttons(self) -> None:
         """Adjust action button labels/states based on project status."""
         status = self._project.status
@@ -397,10 +451,115 @@ class OCRApp:
             await self._run_ocr(translate=True, resume=False)
 
     def _on_backend_change(self, e) -> None:
-        self._lmstudio_settings.visible = (
-            self._backend_radio.value == "lmstudio"
-        )
+        is_lmstudio = self._backend_radio.value == "lmstudio"
+        is_opencode = self._backend_radio.value == "opencode"
+        self._lmstudio_settings.visible = is_lmstudio
+        self._opencode_settings.visible = is_opencode
         self.page.update()
+        if is_opencode and not self._opencode_models_all:
+            asyncio.ensure_future(self._load_opencode_models())
+
+
+    async def _load_opencode_models(self) -> None:
+        """Run `opencode models` and populate the searchable list."""
+        self._opencode_loading.visible = True
+        self.page.update()
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                "opencode", "models",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=15)
+            models = [m.strip() for m in stdout.decode().splitlines() if m.strip()]
+            self._opencode_models_all = models
+            logger.info("[INFO] Loaded %d OpenCode models", len(models))
+        except Exception as exc:
+            logger.warning("Failed to load opencode models: %s", exc)
+            self._opencode_models_all = [self._project.translation_opencode_model]
+        finally:
+            self._opencode_loading.visible = False
+        self._render_opencode_model_list(self._opencode_models_all)
+        self.page.update()
+
+    def _on_opencode_model_search(self, e) -> None:
+        """Filter the model list by the search query (fuzzy substring)."""
+        query = (self._opencode_model_search.value or "").lower().strip()
+        if not query:
+            filtered = self._opencode_models_all
+        else:
+            # Simple fuzzy: every character of the query must appear in order
+            def fuzzy_match(model: str) -> bool:
+                it = iter(model.lower())
+                return all(c in it for c in query)
+            filtered = [m for m in self._opencode_models_all if fuzzy_match(m)]
+        self._opencode_model_container.visible = True
+        self._render_opencode_model_list(filtered)
+
+    def _on_opencode_search_focus(self, e) -> None:  # noqa: ARG002
+        """Show the model list when the search field gains focus."""
+        self._opencode_model_container.visible = True
+        self.page.update()
+
+    async def _on_opencode_search_blur(self, e) -> None:  # noqa: ARG002
+        """Hide the model list when the search field loses focus.
+
+        A short delay lets a list-item click register before the list disappears.
+        """
+        import asyncio as _asyncio
+        await _asyncio.sleep(0.15)
+        self._opencode_model_container.visible = False
+        self.page.update()
+        self.page.update()
+
+    def _render_opencode_model_list(self, models: list[str]) -> None:
+        """Rebuild the list-view with the given models."""
+        current = self._project.translation_opencode_model
+
+        def make_tile(model: str):
+            is_selected = model == current
+            return ft.Container(
+                content=ft.Row(
+                    [
+                        ft.Icon(
+                            ft.Icons.CHECK_CIRCLE if is_selected else ft.Icons.RADIO_BUTTON_UNCHECKED,
+                            size=16,
+                            color="#1976D2" if is_selected else "#BDBDBD",
+                        ),
+                        ft.Text(
+                            model,
+                            size=13,
+                            color="#1976D2" if is_selected else "#212121",
+                            weight=ft.FontWeight.W_500 if is_selected else ft.FontWeight.NORMAL,
+                        ),
+                    ],
+                    spacing=8,
+                ),
+                padding=ft.padding.symmetric(horizontal=12, vertical=6),
+                bgcolor="#E3F2FD" if is_selected else None,
+                border_radius=4,
+                on_click=lambda _, m=model: self._select_opencode_model(m),
+                ink=True,
+            )
+
+        self._opencode_model_list.controls = [make_tile(m) for m in models]
+
+    def _select_opencode_model(self, model: str) -> None:
+        """Set the chosen OpenCode model and close the dropdown."""
+        self._project.translation_opencode_model = model
+        self._opencode_selected_label.value = f"Selected: {model}"
+        self._opencode_model_search.value = ""
+        self._opencode_model_container.visible = False
+        self._render_opencode_model_list(self._opencode_models_all)
+        self.page.update()
+
+    def _passes_opencode_filter(self, model: str) -> bool:
+        query = (self._opencode_model_search.value or "").lower().strip()
+        if not query:
+            return True
+        it = iter(model.lower())
+        return all(c in it for c in query)
+
 
     async def _on_pause_resume(self, e) -> None:
         if self._project.status.can_pause():
@@ -449,20 +608,19 @@ class OCRApp:
             engine = OCREngine(language=self._project.ocr_language)
             loop = asyncio.get_event_loop()
 
-        # Convert PDF to images (all pages)
-        conv_start = time.perf_counter()
-        self._set_status("Converting PDF to images...")
-        images = await loop.run_in_executor(
-            None,
-            engine._convert_pdf_to_images,
-            self._project.source_pdf,
-        )
-        conv_duration = time.perf_counter() - conv_start
-        logger.info("[INFO] PDF conversion took %.2fs", conv_duration)
-        total = len(images)
-        self._project.ocr_total_pages = total
-        self._project.save()
-
+            # Convert PDF to images (all pages)
+            conv_start = time.perf_counter()
+            self._set_status("Converting PDF to images...")
+            images = await loop.run_in_executor(
+                None,
+                engine._convert_pdf_to_images,
+                self._project.source_pdf,
+            )
+            conv_duration = time.perf_counter() - conv_start
+            logger.info("[INFO] PDF conversion took %.2fs", conv_duration)
+            total = len(images)
+            self._project.ocr_total_pages = total
+            self._project.save()
 
             pages_text: list[str] = list(existing_pages)
 
@@ -700,7 +858,7 @@ class OCRApp:
                 base_url=self._project.translation_lmstudio_url,
                 model=self._project.translation_lmstudio_model,
             ),
-            opencode=OpenCodeConfig(),
+            opencode=OpenCodeConfig(model=self._project.translation_opencode_model),
         )
         return get_backend(config)
 

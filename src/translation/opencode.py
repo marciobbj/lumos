@@ -14,7 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-12#YT|TRANSLATION_PROMPT = """\
+TRANSLATION_PROMPT = """\
 
 Translate the following text to {target_language}. \
 Return ONLY the translated text, with no additional commentary, explanations, or notes.
@@ -76,32 +76,6 @@ class OpenCodeBackend(TranslationBackend):
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-...
-            )
-        except asyncio.TimeoutError:
-...
-            ) from None
-
-        duration = time.perf_counter() - start_time
-        logger.info("[INFO] OpenCode CLI finished in %.2fs", duration)
-        if proc.returncode != 0:
-
-            target_language=target_language,
-            text=text,
-        )
-
-        proc = await asyncio.create_subprocess_exec(
-            "opencode",
-            "run",
-            "--format",
-            "json",
-            "-m",
-            self._config.model,
-            prompt,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-
         try:
             stdout_bytes, stderr_bytes = await asyncio.wait_for(
                 proc.communicate(),
