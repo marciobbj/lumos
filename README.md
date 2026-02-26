@@ -108,32 +108,6 @@ The desktop application will launch in a new Flet window.
 - Use **Pause** to stop a long run and continue later — progress is saved after every page.
 - For very large documents, consider splitting the PDF into chapters before creating a project. Smaller chunks are easier to review incrementally and recover from possible errors.
 
-## Project Structure
-
-```
-lumos/
-├── pyproject.toml              # Project metadata and dependencies
-├── .python-version             # Python version (3.12.2)
-├── README.md                   # This file
-├── main.py                     # Application entry point
-├── src/
-│   ├── ocr/                    # OCR extraction logic
-│   ├── translation/            # Translation logic (LM Studio, OpenCode)
-│   ├── projects/               # Project data model and manager
-│   └── ui/                     # Flet UI (project browser + scan screen)
-└── output/                     # One folder per project
-    └── <project-name>/
-        ├── project.json        # Metadata and progress state
-        ├── ocr.txt             # Full OCR result
-        ├── translation.txt     # Full translation result
-        ├── pages/              # Per-page OCR cache (used for resume)
-        │   ├── page_0000.txt
-        │   └── ...
-        └── translation_pages/  # Per-page translation cache (used for resume)
-            ├── page_0000.txt
-            └── ...
-```
-
 ## Dependencies
 
 - **flet** (>=0.25.0): UI framework
