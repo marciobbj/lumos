@@ -7,6 +7,18 @@
 
 ---
 
+## Features
+
+- **Project-based workflow** — every scan session is saved as a named project under `output/<project>/`. Open the app and pick up where you left off.
+- **Project browser** — the home screen lists all projects with their current status, progress, and last-updated time. Create, open, or delete projects from one place.
+- **OCR extraction** — converts PDF pages to images via Poppler and runs Tesseract OCR. Supports Portuguese, English, French, German, and Spanish (individually or combined).
+- **AI translation** — translates the extracted text page by page using either a local [LM Studio](https://lmstudio.ai/) server or the OpenCode CLI. Partial results are streamed to the UI as each page completes.
+- **Pause and resume** — pause an OCR or translation run at any time. Progress is saved to disk page by page (`output/<project>/pages/`), so resuming skips already-completed pages.
+- **Live preview** — OCR and translation results appear in the UI as each page is processed, without waiting for the full document to finish.
+- **Auto-save** — results are written to `output/<project>/ocr.txt` and `output/<project>/translation.txt` automatically as processing proceeds.
+
+---
+
 ## Prerequisites
 
 ### System Dependencies
@@ -91,8 +103,10 @@ python main.py
 
 The desktop application will launch in a new Flet window.
 
-### 💡 Tip for Large Documents
-For documents with many pages, it is highly recommended to **split the PDF into smaller parts** (e.g., by chapters). Extract and translate them separately, and then merge the results if needed. This ensures better stability and allows you to review the progress incrementally.
+### 💡 Tips for Large Documents
+
+- Use **Pause** to stop a long run and continue later — progress is saved after every page.
+- For very large documents, consider splitting the PDF into chapters before creating a project. Smaller chunks are easier to review incrementally and recover from errors.
 
 ## Project Structure
 
@@ -105,8 +119,16 @@ lumos/
 ├── src/
 │   ├── ocr/                    # OCR extraction logic
 │   ├── translation/            # Translation logic (LM Studio, OpenCode)
-│   └── ui/                     # Flet UI components
-└── output/                     # Generated extracted text/translations
+│   ├── projects/               # Project data model and manager
+│   └── ui/                     # Flet UI (project browser + scan screen)
+└── output/                     # One folder per project
+    └── <project-name>/
+        ├── project.json        # Metadata and progress state
+        ├── ocr.txt             # Full OCR result
+        ├── translation.txt     # Full translation result
+        └── pages/              # Per-page OCR cache (used for resume)
+            ├── page_0000.txt
+            └── ...
 ```
 
 ## Dependencies

@@ -31,7 +31,7 @@ class LMStudioConfig:
 class OpenCodeConfig:
     """Configuration for the OpenCode CLI backend."""
 
-    timeout: float = 120.0
+    timeout: float = 300.0  # 5 minutes per page — translation can be slow
     model: str = "github-copilot/gpt-5-mini"
 
 

@@ -122,11 +122,16 @@ def _parse_opencode_json(raw_output: str) -> str:
     ``"type": "text"`` carry the actual response content in
     ``part.text``.  We concatenate all such fragments.
 
+    Some models (e.g. github-copilot/gpt-5-mini) prepend a reasoning
+    preamble to the response (e.g. "I detect trivial intent — ...") before
+    the actual translated text, separated by a blank line (``\n\n``).
+    ``_strip_preamble`` removes that prefix so callers receive clean output.
+
     Args:
         raw_output: Raw stdout from the opencode process.
 
     Returns:
-        The concatenated translated text.
+        The concatenated translated text, with any reasoning preamble removed.
     """
     parts: list[str] = []
     for line in raw_output.splitlines():
@@ -144,4 +149,45 @@ def _parse_opencode_json(raw_output: str) -> str:
             if text_fragment:
                 parts.append(text_fragment)
 
-    return "".join(parts)
+    return _strip_preamble("".join(parts))
+
+
+def _strip_preamble(text: str) -> str:
+    """Remove model reasoning preambles that precede the actual translation.
+
+    Models like github-copilot/gpt-5-mini emit a line such as::
+
+        I detect trivial intent — ... My approach: ...
+
+    followed by a blank line before the real content.  This function
+    detects that pattern and returns only the content after the last
+    such preamble block.
+
+    Args:
+        text: Raw model output, potentially containing a reasoning prefix.
+
+    Returns:
+        The text with any leading reasoning preamble stripped.
+    """
+    # Preamble blocks are separated from the real content by \n\n.
+    # If the model emitted reasoning, everything up to the first \n\n
+    # that is followed by non-empty content is considered preamble.
+    # We detect preamble by looking for known marker phrases.
+    _PREAMBLE_MARKERS = (
+        "I detect ",
+        "My approach:",
+        "I'll ",
+        "I will ",
+    )
+
+    blocks = text.split("\n\n")
+    # Find the first block that does NOT look like a preamble
+    for i, block in enumerate(blocks):
+        stripped = block.strip()
+        if not stripped:
+            continue
+        is_preamble = any(stripped.startswith(m) for m in _PREAMBLE_MARKERS)
+        if not is_preamble:
+            return "\n\n".join(blocks[i:]).strip()
+
+    return text.strip()
