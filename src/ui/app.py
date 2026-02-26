@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
+
 from pathlib import Path
 from typing import Callable
 
@@ -447,16 +449,20 @@ class OCRApp:
             engine = OCREngine(language=self._project.ocr_language)
             loop = asyncio.get_event_loop()
 
-            # Convert PDF to images (all pages)
-            self._set_status("Converting PDF to images...")
-            images = await loop.run_in_executor(
-                None,
-                engine._convert_pdf_to_images,
-                self._project.source_pdf,
-            )
-            total = len(images)
-            self._project.ocr_total_pages = total
-            self._project.save()
+        # Convert PDF to images (all pages)
+        conv_start = time.perf_counter()
+        self._set_status("Converting PDF to images...")
+        images = await loop.run_in_executor(
+            None,
+            engine._convert_pdf_to_images,
+            self._project.source_pdf,
+        )
+        conv_duration = time.perf_counter() - conv_start
+        logger.info("[INFO] PDF conversion took %.2fs", conv_duration)
+        total = len(images)
+        self._project.ocr_total_pages = total
+        self._project.save()
+
 
             pages_text: list[str] = list(existing_pages)
 
@@ -475,7 +481,9 @@ class OCRApp:
                 self._progress_bar.value = i / total
                 self._status_text.value = f"OCR page {i + 1}/{total}..."
                 self.page.update()
+                self.page.update()
 
+                page_ocr_start = time.perf_counter()
                 try:
                     text = await loop.run_in_executor(
                         None, engine._extract_text_from_image, image
@@ -485,6 +493,8 @@ class OCRApp:
                     text = f"[PAGE {i + 1} OCR FAILED]\n"
                 finally:
                     image.close()
+                page_ocr_duration = time.perf_counter() - page_ocr_start
+                logger.info("[INFO] OCR page %d/%d took %.2fs", i + 1, total, page_ocr_duration)
 
                 pages_text.append(text)
                 self._project.save_ocr_page(i, text)
@@ -594,7 +604,9 @@ class OCRApp:
                 self._set_status(f"Translating page {i}/{total}...")
                 self._progress_bar.value = (i - 1) / total
                 self.page.update()
+                self.page.update()
 
+                page_trans_start = time.perf_counter()
                 page_translation: str | None = None
                 for attempt in range(3):
                     try:
@@ -611,6 +623,9 @@ class OCRApp:
                             await asyncio.sleep(wait_time)
                         else:
                             logger.warning("Page %d failed: %s", i, exc)
+                
+                page_trans_duration = time.perf_counter() - page_trans_start
+                logger.info("[INFO] Translation page %d/%d took %.2fs", i, total, page_trans_duration)
 
                 if page_translation:
                     translated_parts.append(page_translation)

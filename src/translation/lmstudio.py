@@ -3,12 +3,19 @@
 from __future__ import annotations
 
 import httpx
+import time
+
 from openai import AsyncOpenAI
 
 from src.translation.base import TranslationBackend, TranslationResult
 from src.translation.config import LMStudioConfig
 
-TRANSLATION_PROMPT = """\
+import logging
+
+logger = logging.getLogger(__name__)
+
+11#YT|TRANSLATION_PROMPT = """\
+
 Translate the following text to {target_language}. \
 Return ONLY the translated text, with no additional commentary, explanations, or notes.
 Preserve the original formatting and paragraph structure.
@@ -48,6 +55,31 @@ class LMStudioBackend(TranslationBackend):
             openai.APIError: If the LM Studio API returns an error.
         """
         prompt = TRANSLATION_PROMPT.format(
+            target_language=target_language,
+            text=text,
+        )
+
+        logger.info("[INFO] Sending translation prompt to LM Studio (model: %s)", self._config.model)
+        start_time = time.perf_counter()
+        response = await self._client.chat.completions.create(
+            model=self._config.model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a professional translator. "
+                        "Return ONLY the translation, nothing else."
+                    ),
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.3,
+        )
+
+        duration = time.perf_counter() - start_time
+        logger.info("[INFO] Received response from LM Studio in %.2fs", duration)
+        translated = response.choices[0].message.content
+
             target_language=target_language,
             text=text,
         )

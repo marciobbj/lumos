@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Optional, Callable
 import asyncio
 import logging
+import time
+
 
 import pytesseract
 from pdf2image import convert_from_path
@@ -79,16 +81,20 @@ class OCREngine:
         loop = asyncio.get_event_loop()
 
         # PDF → PIL Images (CPU/IO bound)
-        logger.info("Converting PDF to images at %d DPI: %s", self.dpi, pdf_path)
+        start_time = time.perf_counter()
+        logger.info("[INFO] Converting PDF to images at %d DPI: %s", self.dpi, pdf_path)
         images = await loop.run_in_executor(
             None, self._convert_pdf_to_images, str(pdf_path)
         )
+        duration = time.perf_counter() - start_time
         total = len(images)
-        logger.info("Got %d page(s) from PDF", total)
+        logger.info("[INFO] Got %d page(s) from PDF (took %.2fs)", total, duration)
 
         # Images → Text (CPU bound, one page at a time for progress)
         pages_text: list[str] = []
+        total_ocr_start = time.perf_counter()
         for i, image in enumerate(images):
+            page_start = time.perf_counter()
             try:
                 text = await loop.run_in_executor(
                     None, self._extract_text_from_image, image
@@ -101,12 +107,16 @@ class OCREngine:
             finally:
                 image.close()
 
+            page_duration = time.perf_counter() - page_start
+            logger.info("[INFO] OCR page %d/%d completed in %.2fs", i + 1, total, page_duration)
             pages_text.append(text)
 
             if progress_callback:
                 progress_callback(i + 1, total)
 
-        # Join with page markers
+        total_ocr_duration = time.perf_counter() - total_ocr_start
+        logger.info("[INFO] Total OCR processing took %.2fs", total_ocr_duration)
+
         full_text = self._join_pages(pages_text)
 
         return OCRResult(
