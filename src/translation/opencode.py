@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import shutil
 import tempfile
 import os
@@ -16,14 +17,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-TRANSLATION_PROMPT = """\
-
-Translate the following text to {target_language}. \
-Return ONLY the translated text, with no additional commentary, explanations, or notes.
-Preserve the original formatting and paragraph structure.
-
-Text to translate:
-{text}"""
+INSTRUCTION_TEMPLATE = (
+    "Translate the following text to {target_language}. "
+    "Return ONLY the translated text, with no additional commentary, "
+    "explanations, or notes. "
+    "Preserve the original formatting and paragraph structure.\n\n"
+    "Text to translate:\n@{path}"
+)
 
 
 class OpenCodeBackend(TranslationBackend):
@@ -60,15 +60,10 @@ class OpenCodeBackend(TranslationBackend):
                 "opencode CLI is not installed or not found in PATH."
             )
 
-        prompt = TRANSLATION_PROMPT.format(
-            target_language=target_language,
-            text=text,
-        )
-
         logger.info("[INFO] Sending translation prompt to OpenCode CLI (model: %s)", self._config.model)
         start_time = time.perf_counter()
 
-        # Write prompt to a temp file so large pages aren't passed as a CLI arg
+        # Write only the page text to a temp file; the instruction is passed as CLI arg
         with tempfile.NamedTemporaryFile(
             mode="w",
             suffix=".txt",
@@ -76,8 +71,13 @@ class OpenCodeBackend(TranslationBackend):
             delete=False,
             encoding="utf-8",
         ) as tmp:
-            tmp.write(prompt)
+            tmp.write(text)
             tmp_path = tmp.name
+
+        prompt = INSTRUCTION_TEMPLATE.format(
+            target_language=target_language,
+            path=tmp_path,
+        )
 
         proc: asyncio.subprocess.Process | None = None
         try:
@@ -88,7 +88,7 @@ class OpenCodeBackend(TranslationBackend):
                 "json",
                 "-m",
                 self._config.model,
-                f"@{tmp_path}",
+                prompt,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -174,7 +174,17 @@ def _parse_opencode_json(raw_output: str) -> str:
             if text_fragment:
                 parts.append(text_fragment)
 
-    return _strip_preamble("".join(parts))
+    return _strip_line_ids(_strip_preamble("".join(parts)))
+
+
+
+# Matches LINE#ID prefixes like "1#JB|" or "106#WX|" that the model may echo back
+_LINE_ID_RE = re.compile(r"^\d+#[A-Z]{2}\|", re.MULTILINE)
+
+
+def _strip_line_ids(text: str) -> str:
+    """Remove any LINE#ID editor prefixes the model echoed in the translation."""
+    return _LINE_ID_RE.sub("", text)
 
 
 def _strip_preamble(text: str) -> str:
