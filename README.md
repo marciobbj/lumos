@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center">Lumos</h1>
-<p align="center"><b>Desktop OCR + Translation App</b></p>
+<p align="center"><b>A Python application for extracting text from PDFs with and translate it, backed by AI.</b></p>
 
 ---
 
@@ -121,5 +121,3 @@ lumos/
 ## License
 
 MIT
-
-A Python Flet-based desktop application for extracting text from images and PDFs with translation support via LM Studio OpenAI-compatible API.
