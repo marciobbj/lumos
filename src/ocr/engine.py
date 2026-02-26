@@ -1,5 +1,3 @@
-"""OCR engine: converts PDF pages to images and extracts text via Tesseract."""
-
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, Callable

@@ -57,9 +57,6 @@ class OCRApp:
         self._build_ui()
         self._restore_state()
 
-    # ------------------------------------------------------------------
-    # Page setup (called once per app launch, not per screen)
-    # ------------------------------------------------------------------
 
     @staticmethod
     def configure_page(page: ft.Page) -> None:
@@ -71,14 +68,10 @@ class OCRApp:
         page.theme_mode = ft.ThemeMode.LIGHT
         page.bgcolor = "#F5F5F5"
 
-    # ------------------------------------------------------------------
-    # Build UI
-    # ------------------------------------------------------------------
 
     def _build_ui(self) -> None:
         self.page.controls.clear()
 
-        # ── Header with back button ───────────────────────────────────
         project_title = self._project.name.replace("_", " ")
         header = ft.Row(
             [
@@ -94,7 +87,6 @@ class OCRApp:
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
         )
 
-        # ── PDF info row ───────────────────────────────────────────────
         pdf_name = Path(self._project.source_pdf).name
         pdf_info = ft.Text(
             f"PDF: {pdf_name}",
@@ -102,7 +94,6 @@ class OCRApp:
             color="#757575",
         )
 
-        # ── Settings card ──────────────────────────────────────────────
         self._ocr_language = ft.Dropdown(
             label="OCR Language",
             value=self._project.ocr_language,
@@ -151,7 +142,6 @@ class OCRApp:
             visible=(self._project.translation_backend == "lmstudio"),
         )
 
-        # ── OpenCode settings ─────────────────────────────────────────
         self._opencode_models_all: list[str] = []  # full list from `opencode models`
         self._opencode_model_search = ft.TextField(
             label="Search model...",
@@ -222,7 +212,6 @@ class OCRApp:
             ),
         )
 
-        # ── Action buttons ────────────────────────────────────────────
         self._btn_ocr = ft.FilledButton(
             "Extract Text (OCR)",
             icon=ft.Icons.DOCUMENT_SCANNER,
@@ -246,7 +235,6 @@ class OCRApp:
             spacing=10,
         )
 
-        # ── Progress section ──────────────────────────────────────────
         self._progress_bar = ft.ProgressBar(visible=False, expand=True)
         self._status_text = ft.Text("", size=12, color="#757575")
         progress_section = ft.Column(
@@ -254,7 +242,6 @@ class OCRApp:
             spacing=5,
         )
 
-        # ── Results tabs ──────────────────────────────────────────────
         self._ocr_text_field = result_text_area()
         self._ocr_char_count = char_count_label()
         self._translation_text_field = result_text_area()
@@ -292,7 +279,6 @@ class OCRApp:
             expand=True,
         )
 
-        # ── Save buttons ──────────────────────────────────────────────
         self._btn_save_ocr = ft.OutlinedButton(
             "Save OCR Text",
             icon=ft.Icons.SAVE_ALT,
@@ -310,7 +296,6 @@ class OCRApp:
             spacing=10,
         )
 
-        # ── Assemble ──────────────────────────────────────────────────
         self.page.add(
             ft.Column(
                 [
@@ -342,9 +327,6 @@ class OCRApp:
             padding=ft.padding.symmetric(horizontal=8, vertical=4),
         )
 
-    # ------------------------------------------------------------------
-    # Restore persisted state
-    # ------------------------------------------------------------------
 
     def _restore_state(self) -> None:
         """Load previously saved OCR / translation results into the UI."""
@@ -376,11 +358,9 @@ class OCRApp:
             self._translation_char_count.value = f"{len(trans_text):,} characters"
             self._btn_save_translation.disabled = False
 
-        # Update action button labels based on current status
         self._refresh_action_buttons()
         self.page.update()
 
-        # If backend is already opencode, pre-load models list
         if self._project.translation_backend == "opencode":
             asyncio.ensure_future(self._load_opencode_models())
 
@@ -423,9 +403,6 @@ class OCRApp:
                 or status in (ProjectStatus.PENDING, ProjectStatus.OCR_DONE)
             )
 
-    # ------------------------------------------------------------------
-    # Event handlers
-    # ------------------------------------------------------------------
 
     async def _on_back_click(self, e) -> None:
         # If processing, just pause first
@@ -580,9 +557,6 @@ class OCRApp:
             path.write_text(self._translated_text, encoding="utf-8")
             self._show_snackbar(f"Translation saved to {path.name}")
 
-    # ------------------------------------------------------------------
-    # Core processing — OCR
-    # ------------------------------------------------------------------
 
     async def _run_ocr(self, translate: bool, resume: bool) -> None:
         """Run OCR on the project PDF, optionally resuming from a checkpoint."""
@@ -826,9 +800,6 @@ class OCRApp:
             self._refresh_action_buttons()
             self.page.update()
 
-    # ------------------------------------------------------------------
-    # Pause / resume
-    # ------------------------------------------------------------------
 
     async def _pause(self) -> None:
         """Signal the running coroutine to pause at the next checkpoint."""
@@ -845,9 +816,6 @@ class OCRApp:
         self._set_status("Paused. You can resume any time.")
         self.page.update()
 
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
 
     def _create_translation_backend(self):
         backend_value = self._project.translation_backend

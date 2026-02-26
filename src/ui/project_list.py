@@ -41,16 +41,12 @@ class ProjectListScreen:
 
         self._build()
 
-    # ------------------------------------------------------------------
-    # Build
-    # ------------------------------------------------------------------
 
     def _build(self) -> None:
         self.page.controls.clear()
 
         projects = self._manager.list_projects()
 
-        # ── Header ──────────────────────────────────────────────────────
         header = ft.Row(
             [
                 ft.Text("Lumos", size=26, weight=ft.FontWeight.BOLD),
@@ -68,7 +64,6 @@ class ProjectListScreen:
 
         divider = ft.Divider(height=1)
 
-        # ── Project list ─────────────────────────────────────────────────
         if projects:
             list_view = ft.Column(
                 controls=[self._project_card(p) for p in projects],
@@ -214,9 +209,6 @@ class ProjectListScreen:
             ink=True,
         )
 
-    # ------------------------------------------------------------------
-    # Event handlers
-    # ------------------------------------------------------------------
 
     def _open_project(self, project: Project) -> None:
         self._on_open_project(project)

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-"""Reusable UI components for the OCR + Translation app."""
 
 import flet as ft
 
@@ -49,7 +48,6 @@ def action_button(
 
 
 def char_count_label(count: int = 0) -> ft.Text:
-    """Create a character count label."""
     return ft.Text(
         f"{count:,} characters" if count else "No content",
         size=12,

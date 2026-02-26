@@ -20,8 +20,6 @@ logger = logging.getLogger(__name__)
 
 OUTPUT_DIR = Path(__file__).parent.parent.parent / "output"
 
-# ── Status ─────────────────────────────────────────────────────────────────
-
 
 class ProjectStatus(str, Enum):
     PENDING = "pending"          # created, no processing started
@@ -78,9 +76,6 @@ class ProjectStatus(str, Enum):
             ProjectStatus.PENDING,
             ProjectStatus.OCR_DONE,
         )
-
-
-# ── Project ────────────────────────────────────────────────────────────────
 
 
 @dataclass
@@ -159,7 +154,6 @@ class Project:
     def touch(self) -> None:
         self.updated_at = datetime.now().isoformat()
 
-    # ── Persistence ────────────────────────────────────────────────────────
 
     def save(self) -> None:
         """Persist project metadata to project.json."""
@@ -233,9 +227,6 @@ class Project:
         project = cls(**data)
         project._output_dir = folder.parent  # inject correct output dir
         return project
-
-
-# ── Manager ────────────────────────────────────────────────────────────────
 
 
 class ProjectManager:

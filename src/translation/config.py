@@ -11,16 +11,12 @@ if TYPE_CHECKING:
 
 
 class BackendType(Enum):
-    """Available translation backend types."""
-
     LMSTUDIO = "lmstudio"
     OPENCODE = "opencode"
 
 
 @dataclass
 class LMStudioConfig:
-    """Configuration for the LM Studio OpenAI-compatible backend."""
-
     base_url: str = "http://localhost:1234/v1"
     api_key: str = "lm-studio"
     model: str = "local-model"
@@ -29,16 +25,12 @@ class LMStudioConfig:
 
 @dataclass
 class OpenCodeConfig:
-    """Configuration for the OpenCode CLI backend."""
-
     timeout: float = 300.0  # 5 minutes per page — translation can be slow
     model: str = "github-copilot/gpt-5-mini"
 
 
 @dataclass
 class TranslationConfig:
-    """Top-level translation configuration."""
-
     backend: BackendType = BackendType.LMSTUDIO
     lmstudio: LMStudioConfig = field(default_factory=LMStudioConfig)
     opencode: OpenCodeConfig = field(default_factory=OpenCodeConfig)
@@ -56,7 +48,6 @@ def get_backend(config: TranslationConfig | None = None) -> TranslationBackend:
     Raises:
         ValueError: If the backend type is unknown.
     """
-    # Import here to avoid circular imports
     from src.translation.lmstudio import LMStudioBackend
     from src.translation.opencode import OpenCodeBackend
 
