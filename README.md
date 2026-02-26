@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center">Lumos</h1>
-<p align="center"><b>A Python application for extracting text from PDFs with and translate it, backed by AI.</b></p>
+<p align="center"><b>A Python application designed to extract text from PDF documents using OCR technology and provide AI-powered translation capabilities.</b></p>
 
 ---
 
