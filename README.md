@@ -21,7 +21,7 @@
 
 ## Platform Support
 
-This app is currently supported on **Linux only** because it requires the **opencode** CLI to be installed (enforced by a startup check).
+This app is currently supported on **Linux & macOS only** because it requires the **opencode** CLI to be installed (enforced by a startup check).
 
 ---
 
@@ -184,7 +184,7 @@ The desktop application will launch in a new Flet window.
 - **Pillow** (>=11.0.0): Image processing
 - **openai** (>=1.0.0): LM Studio API client (OpenAI compatible)
 - **httpx** (>=0.27.0): Async HTTP client
-- **opencode** (CLI): required for translation (Linux-only)
+- **opencode** (CLI): required for translation (Linux & macOS only)
 
 ## License
 
