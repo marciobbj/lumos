@@ -4,10 +4,9 @@ from typing import Optional, Callable
 import asyncio
 import logging
 import time
-
-
 import pytesseract
 from pdf2image import convert_from_path
+
 
 logger = logging.getLogger(__name__)
 
