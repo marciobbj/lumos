@@ -422,7 +422,6 @@ class OCRApp:
         ):
             await self._pause()
         self._on_back()
-
     async def _on_run_ocr(self, e) -> None:
         if self._project.status == ProjectStatus.OCR_PAUSED:
             await self._run_ocr(translate=False, resume=True)
@@ -573,9 +572,9 @@ class OCRApp:
             if sys.platform == "win32":
                 os.startfile(folder_path)
             elif sys.platform == "darwin":
-                subprocess.run(["open", folder_path], check=False)
+                subprocess.Popen(["open", folder_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             else:
-                subprocess.run(["xdg-open", folder_path], check=False)
+                subprocess.Popen(["xdg-open", folder_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except Exception as exc:
             self._show_error(f"Failed to open folder: {exc}")
 

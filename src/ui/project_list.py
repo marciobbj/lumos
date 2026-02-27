@@ -33,11 +33,17 @@ class ProjectListScreen:
         self._pending_project_name: str | None = None
 
         # Register FilePicker as a page service (Flet 0.81+).
-        # Clear any lingering services from a previous screen first.
-        self._file_picker = ft.FilePicker()
-        page.services.clear()
-        page.services.append(self._file_picker)
-        page.update()
+        # We reuse the existing FilePicker to avoid slow Nautilus/DBus re-initializations on Linux.
+        self._file_picker = None
+        for svc in page.services:
+            if isinstance(svc, ft.FilePicker):
+                self._file_picker = svc
+                break
+        
+        if not self._file_picker:
+            self._file_picker = ft.FilePicker()
+            page.services.append(self._file_picker)
+            page.update()
 
         self._build()
 
