@@ -1,6 +1,6 @@
 """Project data model and manager for Lumos OCR sessions.
 
-Each project is stored as a folder under output/<project_name>/ with:
+Each project is stored as a folder under OUTPUT_DIR/<project_name>/ with:
   - project.json   — metadata and state
   - ocr.txt        — OCR result (if available)
   - translation.txt — translation result (if available)
@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import sys
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from enum import Enum
@@ -18,7 +20,45 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-OUTPUT_DIR = Path(__file__).parent.parent.parent / "output"
+
+def get_default_output_dir() -> Path:
+    """Return the default output directory for this user.
+
+    The dev repo has an `output/` folder, but packaged apps should write to a
+    per-user location.
+
+    Override with `LUMOS_OUTPUT_DIR` if needed.
+    """
+    override = os.environ.get("LUMOS_OUTPUT_DIR")
+    if override:
+        return Path(override).expanduser().resolve()
+
+    # Cross-platform, dependency-free default.
+    # Linux:   $XDG_DATA_HOME/Lumos/output or ~/.local/share/Lumos/output
+    # macOS:   ~/Library/Application Support/Lumos/output
+    # Windows: %APPDATA%\Lumos\output
+    if sys.platform == "win32":
+        base = os.environ.get("APPDATA")
+        if base:
+            return (Path(base) / "Lumos" / "output").resolve()
+        return (Path.home() / "AppData" / "Roaming" / "Lumos" / "output").resolve()
+
+    if sys.platform == "darwin":
+        return (
+            Path.home()
+            / "Library"
+            / "Application Support"
+            / "Lumos"
+            / "output"
+        ).resolve()
+
+    xdg = os.environ.get("XDG_DATA_HOME")
+    if xdg:
+        return (Path(xdg) / "Lumos" / "output").resolve()
+    return (Path.home() / ".local" / "share" / "Lumos" / "output").resolve()
+
+
+OUTPUT_DIR = get_default_output_dir()
 
 
 class ProjectStatus(str, Enum):
