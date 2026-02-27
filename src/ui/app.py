@@ -580,6 +580,7 @@ class OCRApp:
 
         try:
             engine = OCREngine(language=self._project.ocr_language)
+            engine.ensure_languages_available()
             loop = asyncio.get_event_loop()
 
             # Convert PDF to images (all pages)

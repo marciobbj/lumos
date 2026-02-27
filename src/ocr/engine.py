@@ -45,6 +45,26 @@ class OCREngine:
         self.dpi = dpi
         self.tesseract_config = tesseract_config
 
+    def ensure_languages_available(self) -> None:
+        """Validate that all requested Tesseract languages are installed."""
+        requested = [p.strip() for p in (self.language or "").split("+") if p.strip()]
+        if not requested:
+            return
+
+        available = set(self.get_available_languages())
+        missing = [lang for lang in requested if lang not in available]
+        if not missing:
+            return
+
+        missing_str = ", ".join(missing)
+        available_str = ", ".join(sorted(available)) if available else "(none)"
+        raise RuntimeError(
+            "Missing Tesseract language data: "
+            f"{missing_str}. Available: {available_str}. "
+            "Install the language packs (e.g. tesseract-ocr-<lang>) or set "
+            "TESSDATA_PREFIX to a directory containing the corresponding *.traineddata files."
+        )
+
     async def process_pdf(
         self,
         pdf_path: str | Path,
@@ -65,6 +85,9 @@ class OCREngine:
             pytesseract.TesseractError: If Tesseract fails on a page.
         """
         pdf_path = Path(pdf_path)
+
+        # Fail fast with a clearer error than Tesseract's init message.
+        self.ensure_languages_available()
 
         if not pdf_path.exists():
             raise FileNotFoundError(f"PDF file not found: {pdf_path}")

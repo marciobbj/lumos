@@ -34,6 +34,14 @@ Ensure the following are installed on your system:
     brew install tesseract
     ```
 
+Optional (cross-platform): download language data into `./tessdata/`:
+
+```bash
+python scripts/download_tessdata.py
+```
+
+Note: `*.traineddata` files are large; many teams keep them out of git and download them as part of setup.
+
 ### Troubleshooting: Tesseract languages / TESSDATA_PREFIX
 
 If you see errors like:
@@ -58,13 +66,14 @@ It means Tesseract cannot find the `*.traineddata` files for the languages you s
 
 3. Point `TESSDATA_PREFIX` to the directory that contains the traineddata files:
    ```bash
-   export TESSDATA_PREFIX="/usr/share/tessdata"
+   export TESSDATA_PREFIX="/path/to/tessdata"
    tesseract --list-langs
    ```
 
 Notes:
 - This app supports Portuguese (`por`), English (`eng`), French (`fra`), German (`deu`), and Spanish (`spa`).
-- You can also provide your own `tessdata/` directory in the repo root and set `TESSDATA_PREFIX` to it.
+- You can also provide your own `tessdata/` directory in the repo root and set `TESSDATA_PREFIX` to it (or run `python scripts/download_tessdata.py`).
+- Prefer installing language packs via your OS package manager, or provide a local `tessdata/` directory in the repo.
 
 2. **Poppler** (for PDF processing)
    ```bash
@@ -88,7 +97,7 @@ Notes:
 ### 1. Clone/Navigate to Project
 
 ```bash
-cd /home/io/workspace/lumos
+cd /path/to/lumos
 ```
 
 ### 2. Set Python Version

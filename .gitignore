@@ -217,3 +217,7 @@ __marimo__/
 
 # Output files
 output/
+
+# Tesseract language data (large binaries)
+tessdata/*.traineddata
+tessdata/*.traineddata.tmp

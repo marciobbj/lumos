@@ -10,26 +10,25 @@ def _configure_tessdata_prefix() -> None:
     we try a few common locations.
     """
 
-    current = os.environ.get("TESSDATA_PREFIX")
-    if current and Path(current).is_dir():
-        return
-
     def _looks_like_tessdata_dir(p: Path) -> bool:
         if not p.is_dir():
             return False
         # Only consider it valid if it actually contains language data.
         return any(p.glob("*.traineddata"))
 
-    repo_tessdata = Path(__file__).resolve().parent / "tessdata"
-    candidates = [
-        repo_tessdata,
-        Path("/home/io/tessdata_temp"),
-        Path("/usr/share/tessdata"),
-    ]
-    for p in candidates:
+    current = os.environ.get("TESSDATA_PREFIX")
+    if current:
+        p = Path(current)
         if _looks_like_tessdata_dir(p):
-            os.environ["TESSDATA_PREFIX"] = str(p)
             return
+        # If it's set but invalid, remove it so Tesseract can fall back to its
+        # built-in default data locations.
+        os.environ.pop("TESSDATA_PREFIX", None)
+
+    repo_tessdata = Path(__file__).resolve().parent / "tessdata"
+    if _looks_like_tessdata_dir(repo_tessdata):
+        os.environ["TESSDATA_PREFIX"] = str(repo_tessdata)
+        return
 
 
 _configure_tessdata_prefix()
