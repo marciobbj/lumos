@@ -9,13 +9,13 @@
 
 ## Features
 
-- **Project-based workflow** — every scan session is saved as a named project under `output/<project>/`. Open the app and pick up where you left off.
+- **Project-based workflow** — every scan session is saved as a named project on disk. Open the app and pick up where you left off.
 - **Project browser** — the home screen lists all projects with their current status, progress, and last-updated time. Create, open, or delete projects from one place.
 - **OCR extraction** — converts PDF pages to images via Poppler and runs Tesseract OCR. Supports Portuguese, English, French, German, and Spanish (individually or combined).
 - **AI translation** — translates the extracted text page by page using either a local [LM Studio](https://lmstudio.ai/) server or the OpenCode CLI. Partial results are streamed to the UI as each page completes.
 - **Pause and resume** — pause an OCR or translation run at any time. Progress is saved to disk page by page (`pages/` for OCR, `translation_pages/` for translation), so resuming skips already-completed pages.
 - **Live preview** — OCR and translation results appear in the UI as each page is processed, without waiting for the full document to finish.
-- **Auto-save** — results are written to `output/<project>/ocr.txt` and `output/<project>/translation.txt` automatically as processing proceeds.
+- **Auto-save** — results are written to each project's folder automatically as processing proceeds.
 
 ---
 
@@ -129,6 +129,24 @@ python -c "import flet; import pytesseract; import pdf2image; import openai; pri
 ```
 
 ## Configuration
+
+## Project Storage (Default Output Directory)
+
+Projects are stored in a per-user application data directory by default (not inside this repository). Each project is a folder containing `project.json`, `ocr.txt`, `translation.txt`, plus page caches under `pages/` and `translation_pages/`.
+
+The output directory is created automatically on first run.
+
+Default locations:
+
+- Linux: `$XDG_DATA_HOME/Lumos/output` (or `~/.local/share/Lumos/output`)
+- macOS: `~/Library/Application Support/Lumos/output`
+- Windows: `%APPDATA%\\Lumos\\output`
+
+Override the output directory (useful for development) by setting:
+
+```bash
+export LUMOS_OUTPUT_DIR="/path/to/output"
+```
 
 ### Translation Backend
 

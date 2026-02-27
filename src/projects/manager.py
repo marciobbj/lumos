@@ -274,12 +274,22 @@ class ProjectManager:
 
     def __init__(self, output_dir: Path = OUTPUT_DIR) -> None:
         self.output_dir = output_dir
+        # Ensure the base output directory exists so users don't have to create
+        # it manually on first run.
+        try:
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+        except Exception as exc:
+            logger.warning("Could not create output directory %s: %s", self.output_dir, exc)
 
     def list_projects(self) -> list[Project]:
         """Return all projects sorted by most recently updated."""
         projects: list[Project] = []
         if not self.output_dir.exists():
-            return projects
+            try:
+                self.output_dir.mkdir(parents=True, exist_ok=True)
+            except Exception as exc:
+                logger.warning("Could not create output directory %s: %s", self.output_dir, exc)
+                return projects
         for folder in self.output_dir.iterdir():
             if folder.is_dir() and (folder / "project.json").exists():
                 try:
