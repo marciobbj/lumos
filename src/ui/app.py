@@ -11,7 +11,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-
+import sys
+import subprocess
+import os
 from pathlib import Path
 from typing import Callable
 
@@ -291,8 +293,14 @@ class OCRApp:
             on_click=self._on_save_translation,
             disabled=True,
         )
+        self._btn_open_project = ft.OutlinedButton(
+            "Open Project Folder",
+            icon=ft.Icons.FOLDER_OPEN,
+            on_click=self._on_open_project,
+            visible=False,
+        )
         save_row = ft.Row(
-            [self._btn_save_ocr, self._btn_save_translation],
+            [self._btn_save_ocr, self._btn_save_translation, self._btn_open_project],
             spacing=10,
         )
 
@@ -396,12 +404,14 @@ class OCRApp:
         if status == ProjectStatus.DONE:
             self._btn_ocr.disabled = True
             self._btn_ocr_translate.disabled = True
+            self._btn_open_project.visible = True
         else:
             self._btn_ocr.disabled = not (can_ocr or status == ProjectStatus.PENDING)
             self._btn_ocr_translate.disabled = not (
                 can_translate
                 or status in (ProjectStatus.PENDING, ProjectStatus.OCR_DONE)
             )
+            self._btn_open_project.visible = False
 
 
     async def _on_back_click(self, e) -> None:
@@ -556,6 +566,18 @@ class OCRApp:
             path = self._project.translation_path
             path.write_text(self._translated_text, encoding="utf-8")
             self._show_snackbar(f"Translation saved to {path.name}")
+
+    async def _on_open_project(self, e) -> None:
+        folder_path = str(self._project.folder)
+        try:
+            if sys.platform == "win32":
+                os.startfile(folder_path)
+            elif sys.platform == "darwin":
+                subprocess.run(["open", folder_path], check=False)
+            else:
+                subprocess.run(["xdg-open", folder_path], check=False)
+        except Exception as exc:
+            self._show_error(f"Failed to open folder: {exc}")
 
 
     async def _run_ocr(self, translate: bool, resume: bool) -> None:
