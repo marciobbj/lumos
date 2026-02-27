@@ -26,13 +26,45 @@
 Ensure the following are installed on your system:
 
 1. **Tesseract OCR** (for text extraction)
-   ```bash
-   # Ubuntu/Debian
-   sudo apt-get install tesseract-ocr tesseract-ocr-por
+    ```bash
+    # Ubuntu/Debian
+    sudo apt-get install tesseract-ocr tesseract-ocr-por tesseract-ocr-eng tesseract-ocr-fra tesseract-ocr-deu tesseract-ocr-spa
    
-   # macOS
-   brew install tesseract
+    # macOS
+    brew install tesseract
+    ```
+
+### Troubleshooting: Tesseract languages / TESSDATA_PREFIX
+
+If you see errors like:
+
+- `Please make sure the TESSDATA_PREFIX environment variable is set to your "tessdata" directory`
+- `Failed loading language 'fra'`
+- `Tesseract couldn't load any languages! Could not initialize tesseract.`
+
+It means Tesseract cannot find the `*.traineddata` files for the languages you selected.
+
+1. Check which languages are installed:
+   ```bash
+   tesseract --list-langs
    ```
+
+2. Install missing language packs.
+   - Ubuntu/Debian example:
+     ```bash
+     sudo apt-get install tesseract-ocr-por tesseract-ocr-eng tesseract-ocr-fra tesseract-ocr-deu tesseract-ocr-spa
+     ```
+   - macOS (Homebrew): language data is usually included with the install, but can vary by setup.
+
+3. Point `TESSDATA_PREFIX` to the directory that contains the traineddata files:
+   ```bash
+   export TESSDATA_PREFIX="/usr/share/tessdata"
+   tesseract --list-langs
+   ```
+
+Notes:
+- This app supports Portuguese (`por`), English (`eng`), French (`fra`), German (`deu`), and Spanish (`spa`).
+- You can also provide your own `tessdata/` directory in the repo root and set `TESSDATA_PREFIX` to it.
 
 2. **Poppler** (for PDF processing)
    ```bash

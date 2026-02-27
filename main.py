@@ -1,5 +1,38 @@
 import os
-os.environ.setdefault("TESSDATA_PREFIX", "/home/io/tessdata_temp")
+from pathlib import Path
+
+
+def _configure_tessdata_prefix() -> None:
+    """Best-effort Tesseract language data setup.
+
+    This app supports OCR languages that require `*.traineddata` files.
+    If `TESSDATA_PREFIX` is missing or points to a non-existent directory,
+    we try a few common locations.
+    """
+
+    current = os.environ.get("TESSDATA_PREFIX")
+    if current and Path(current).is_dir():
+        return
+
+    def _looks_like_tessdata_dir(p: Path) -> bool:
+        if not p.is_dir():
+            return False
+        # Only consider it valid if it actually contains language data.
+        return any(p.glob("*.traineddata"))
+
+    repo_tessdata = Path(__file__).resolve().parent / "tessdata"
+    candidates = [
+        repo_tessdata,
+        Path("/home/io/tessdata_temp"),
+        Path("/usr/share/tessdata"),
+    ]
+    for p in candidates:
+        if _looks_like_tessdata_dir(p):
+            os.environ["TESSDATA_PREFIX"] = str(p)
+            return
+
+
+_configure_tessdata_prefix()
 
 """Lumos — Desktop OCR + Translation App."""
 
