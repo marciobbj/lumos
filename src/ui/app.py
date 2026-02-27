@@ -574,7 +574,14 @@ class OCRApp:
             elif sys.platform == "darwin":
                 subprocess.Popen(["open", folder_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             else:
-                subprocess.Popen(["xdg-open", folder_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                env = os.environ.copy()
+                env.pop("PYTHONPATH", None)
+                env.pop("PYTHONHOME", None)
+                if "LD_LIBRARY_PATH_ORIG" in env:
+                    env["LD_LIBRARY_PATH"] = env["LD_LIBRARY_PATH_ORIG"]
+                else:
+                    env.pop("LD_LIBRARY_PATH", None)
+                subprocess.Popen(["xdg-open", folder_path], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except Exception as exc:
             self._show_error(f"Failed to open folder: {exc}")
 
