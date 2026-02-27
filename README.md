@@ -19,6 +19,12 @@
 
 ---
 
+## Platform Support
+
+This app is currently supported on **Linux only** because it requires the **opencode** CLI to be installed (enforced by a startup check).
+
+---
+
 ## Prerequisites
 
 ### System Dependencies
@@ -84,13 +90,13 @@ Notes:
    brew install poppler
    ```
 
-3. **opencode** (for AI translation capabilities)
-   - Install and configure opencode CLI as per its documentation.
+3. **opencode** (required; Linux-only)
+    - The app requires the opencode CLI to be installed and checks for it at startup.
 
 4. **Python**
-   ```bash
-   pyenv install 3.12.2
-   ```
+    ```bash
+    pyenv install 3.12.2
+    ```
 
 ## Setup
 
@@ -178,6 +184,7 @@ The desktop application will launch in a new Flet window.
 - **Pillow** (>=11.0.0): Image processing
 - **openai** (>=1.0.0): LM Studio API client (OpenAI compatible)
 - **httpx** (>=0.27.0): Async HTTP client
+- **opencode** (CLI): required for translation (Linux-only)
 
 ## License
 
