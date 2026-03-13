@@ -5,7 +5,7 @@ import asyncio
 import logging
 import time
 import pytesseract
-from pdf2image import convert_from_path
+from pdf2image import convert_from_path, pdfinfo_from_path
 
 
 logger = logging.getLogger(__name__)
@@ -128,7 +128,9 @@ class OCREngine:
                 image.close()
 
             page_duration = time.perf_counter() - page_start
-            logger.info("[INFO] OCR page %d/%d completed in %.2fs", i + 1, total, page_duration)
+            logger.info(
+                "[INFO] OCR page %d/%d completed in %.2fs", i + 1, total, page_duration
+            )
             pages_text.append(text)
 
             if progress_callback:
@@ -150,6 +152,26 @@ class OCREngine:
     def _convert_pdf_to_images(self, pdf_path: str) -> list:
         """Convert PDF file to a list of PIL Image objects."""
         return convert_from_path(pdf_path, dpi=self.dpi)
+
+    def get_pdf_page_count(self, pdf_path: str | Path) -> int:
+        """Return number of pages in a PDF without rendering all pages."""
+        info = pdfinfo_from_path(str(pdf_path))
+        pages = int(info.get("Pages", 0))
+        if pages <= 0:
+            raise RuntimeError(f"Could not determine page count for PDF: {pdf_path}")
+        return pages
+
+    def _convert_pdf_page_to_image(self, pdf_path: str | Path, page_number: int):
+        """Render a single 1-based PDF page into a PIL Image."""
+        images = convert_from_path(
+            str(pdf_path),
+            dpi=self.dpi,
+            first_page=page_number,
+            last_page=page_number,
+        )
+        if not images:
+            raise RuntimeError(f"Failed to render page {page_number}")
+        return images[0]
 
     def _extract_text_from_image(self, image) -> str:
         """Run Tesseract OCR on a single PIL Image."""

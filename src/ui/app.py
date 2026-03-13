@@ -59,7 +59,6 @@ class OCRApp:
         self._build_ui()
         self._restore_state()
 
-
     @staticmethod
     def configure_page(page: ft.Page) -> None:
         page.title = "Lumos"
@@ -69,7 +68,6 @@ class OCRApp:
         page.window.min_height = 600
         page.theme_mode = ft.ThemeMode.LIGHT
         page.bgcolor = "#F5F5F5"
-
 
     def _build_ui(self) -> None:
         self.page.controls.clear()
@@ -207,7 +205,6 @@ class OCRApp:
                         self._lmstudio_settings,
                         self._opencode_settings,
                     ],
-
                     spacing=10,
                 ),
                 padding=15,
@@ -335,7 +332,6 @@ class OCRApp:
             padding=ft.padding.symmetric(horizontal=8, vertical=4),
         )
 
-
     def _restore_state(self) -> None:
         """Load previously saved OCR / translation results into the UI."""
         ocr_text = self._project.load_ocr_result()
@@ -349,6 +345,7 @@ class OCRApp:
             if not pages:
                 # Fall back: split by page markers
                 import re
+
                 parts = re.split(r"--- Page \d+ ---\n\n", ocr_text)
                 pages = [p for p in parts if p.strip()]
             self._ocr_result = OCRResult(
@@ -391,15 +388,21 @@ class OCRApp:
         if status == ProjectStatus.TRANSLATION_PAUSED:
             self._btn_ocr_translate.content = "Resume Translation"
             self._btn_ocr_translate.icon = ft.Icons.PLAY_ARROW
-            self._btn_ocr_translate.style = ft.ButtonStyle(bgcolor="#7B1FA2", color="white")
+            self._btn_ocr_translate.style = ft.ButtonStyle(
+                bgcolor="#7B1FA2", color="white"
+            )
         elif status == ProjectStatus.OCR_DONE:
             self._btn_ocr_translate.content = "Translate OCR Result"
             self._btn_ocr_translate.icon = ft.Icons.TRANSLATE
-            self._btn_ocr_translate.style = ft.ButtonStyle(bgcolor="#388E3C", color="white")
+            self._btn_ocr_translate.style = ft.ButtonStyle(
+                bgcolor="#388E3C", color="white"
+            )
         else:
             self._btn_ocr_translate.content = "Extract + Translate"
             self._btn_ocr_translate.icon = ft.Icons.TRANSLATE
-            self._btn_ocr_translate.style = ft.ButtonStyle(bgcolor="#388E3C", color="white")
+            self._btn_ocr_translate.style = ft.ButtonStyle(
+                bgcolor="#388E3C", color="white"
+            )
 
         if status == ProjectStatus.DONE:
             self._btn_ocr.disabled = True
@@ -413,7 +416,6 @@ class OCRApp:
             )
             self._btn_open_project.visible = False
 
-
     async def _on_back_click(self, e) -> None:
         # If processing, just pause first
         if self._project.status in (
@@ -422,6 +424,7 @@ class OCRApp:
         ):
             await self._pause()
         self._on_back()
+
     async def _on_run_ocr(self, e) -> None:
         if self._project.status == ProjectStatus.OCR_PAUSED:
             await self._run_ocr(translate=False, resume=True)
@@ -445,14 +448,14 @@ class OCRApp:
         if is_opencode and not self._opencode_models_all:
             asyncio.ensure_future(self._load_opencode_models())
 
-
     async def _load_opencode_models(self) -> None:
         """Run `opencode models` and populate the searchable list."""
         self._opencode_loading.visible = True
         self.page.update()
         try:
             proc = await asyncio.create_subprocess_exec(
-                "opencode", "models",
+                "opencode",
+                "models",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -478,6 +481,7 @@ class OCRApp:
             def fuzzy_match(model: str) -> bool:
                 it = iter(model.lower())
                 return all(c in it for c in query)
+
             filtered = [m for m in self._opencode_models_all if fuzzy_match(m)]
         self._opencode_model_container.visible = True
         self._render_opencode_model_list(filtered)
@@ -493,6 +497,7 @@ class OCRApp:
         A short delay lets a list-item click register before the list disappears.
         """
         import asyncio as _asyncio
+
         await _asyncio.sleep(0.15)
         self._opencode_model_container.visible = False
         self.page.update()
@@ -508,7 +513,9 @@ class OCRApp:
                 content=ft.Row(
                     [
                         ft.Icon(
-                            ft.Icons.CHECK_CIRCLE if is_selected else ft.Icons.RADIO_BUTTON_UNCHECKED,
+                            ft.Icons.CHECK_CIRCLE
+                            if is_selected
+                            else ft.Icons.RADIO_BUTTON_UNCHECKED,
                             size=16,
                             color="#1976D2" if is_selected else "#BDBDBD",
                         ),
@@ -516,7 +523,9 @@ class OCRApp:
                             model,
                             size=13,
                             color="#1976D2" if is_selected else "#212121",
-                            weight=ft.FontWeight.W_500 if is_selected else ft.FontWeight.NORMAL,
+                            weight=ft.FontWeight.W_500
+                            if is_selected
+                            else ft.FontWeight.NORMAL,
                         ),
                     ],
                     spacing=8,
@@ -546,7 +555,6 @@ class OCRApp:
         it = iter(model.lower())
         return all(c in it for c in query)
 
-
     async def _on_pause_resume(self, e) -> None:
         if self._project.status.can_pause():
             await self._pause()
@@ -572,7 +580,11 @@ class OCRApp:
             if sys.platform == "win32":
                 os.startfile(folder_path)
             elif sys.platform == "darwin":
-                subprocess.Popen(["open", folder_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.Popen(
+                    ["open", folder_path],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
             else:
                 env = os.environ.copy()
                 env.pop("PYTHONPATH", None)
@@ -581,10 +593,14 @@ class OCRApp:
                     env["LD_LIBRARY_PATH"] = env["LD_LIBRARY_PATH_ORIG"]
                 else:
                     env.pop("LD_LIBRARY_PATH", None)
-                subprocess.Popen(["xdg-open", folder_path], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.Popen(
+                    ["xdg-open", folder_path],
+                    env=env,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
         except Exception as exc:
             self._show_error(f"Failed to open folder: {exc}")
-
 
     async def _run_ocr(self, translate: bool, resume: bool) -> None:
         """Run OCR on the project PDF, optionally resuming from a checkpoint."""
@@ -611,37 +627,55 @@ class OCRApp:
             engine.ensure_languages_available()
             loop = asyncio.get_event_loop()
 
-            # Convert PDF to images (all pages)
+            # Discover page count first, then render one page at a time.
             conv_start = time.perf_counter()
-            self._set_status("Converting PDF to images...")
-            images = await loop.run_in_executor(
+            self._set_status("Reading PDF metadata...")
+            total = await loop.run_in_executor(
                 None,
-                engine._convert_pdf_to_images,
+                engine.get_pdf_page_count,
                 self._project.source_pdf,
             )
             conv_duration = time.perf_counter() - conv_start
-            logger.info("[INFO] PDF conversion took %.2fs", conv_duration)
-            total = len(images)
+            logger.info(
+                "[INFO] PDF metadata read for %d page(s) in %.2fs", total, conv_duration
+            )
             self._project.ocr_total_pages = total
             self._project.save()
 
+            if start_page > total:
+                start_page = total
+                existing_pages = existing_pages[:total]
+
             pages_text: list[str] = list(existing_pages)
 
-            for i, image in enumerate(images):
-                # Skip already-processed pages
-                if i < start_page:
-                    image.close()
-                    continue
+            preview_every = 5
+
+            for i in range(start_page, total):
+                page_number = i + 1
 
                 # ── Pause point ──────────────────────────────────────
                 await self._pause_event.wait()
                 if self._cancel_requested:
-                    image.close()
                     break
 
+                self._set_status(f"Rendering page {page_number}/{total}...")
+                page_render_start = time.perf_counter()
+                image = await loop.run_in_executor(
+                    None,
+                    engine._convert_pdf_page_to_image,
+                    self._project.source_pdf,
+                    page_number,
+                )
+                page_render_duration = time.perf_counter() - page_render_start
+                logger.info(
+                    "[INFO] Render page %d/%d took %.2fs",
+                    page_number,
+                    total,
+                    page_render_duration,
+                )
+
                 self._progress_bar.value = i / total
-                self._status_text.value = f"OCR page {i + 1}/{total}..."
-                self.page.update()
+                self._status_text.value = f"OCR page {page_number}/{total}..."
                 self.page.update()
 
                 page_ocr_start = time.perf_counter()
@@ -650,12 +684,17 @@ class OCRApp:
                         None, engine._extract_text_from_image, image
                     )
                 except Exception as exc:
-                    logger.warning("OCR failed on page %d: %s", i + 1, exc)
-                    text = f"[PAGE {i + 1} OCR FAILED]\n"
+                    logger.warning("OCR failed on page %d: %s", page_number, exc)
+                    text = f"[PAGE {page_number} OCR FAILED]\n"
                 finally:
                     image.close()
                 page_ocr_duration = time.perf_counter() - page_ocr_start
-                logger.info("[INFO] OCR page %d/%d took %.2fs", i + 1, total, page_ocr_duration)
+                logger.info(
+                    "[INFO] OCR page %d/%d took %.2fs",
+                    page_number,
+                    total,
+                    page_ocr_duration,
+                )
 
                 pages_text.append(text)
                 self._project.save_ocr_page(i, text)
@@ -663,12 +702,13 @@ class OCRApp:
                 self._project.touch()
                 self._project.save()
 
-                # Live preview
-                full_text = engine._join_pages(pages_text)
-                self._ocr_text_field.value = full_text
-                self._ocr_char_count.value = f"{len(full_text):,} characters"
-                self._btn_save_ocr.disabled = False
-                self.page.update()
+                # Live preview (throttled for large PDFs)
+                if (len(pages_text) % preview_every == 0) or (page_number == total):
+                    full_text = engine._join_pages(pages_text)
+                    self._ocr_text_field.value = full_text
+                    self._ocr_char_count.value = f"{len(full_text):,} characters"
+                    self._btn_save_ocr.disabled = False
+                    self.page.update()
 
             if self._cancel_requested:
                 # Paused mid-OCR
@@ -727,22 +767,32 @@ class OCRApp:
         start_page = 0
         translated_parts: list[str] = []
         if resume:
-            existing = self._project.load_translation_result()
-            if existing:
-                # Count already-translated pages by splitting on double newline
-                import re
-                parts = re.split(r"\n\n(?=--- Page \d+ ---)", existing)
-                translated_parts = list(parts)
-                start_page = len(translated_parts)
+            translated_parts = self._project.load_translation_pages()
+            start_page = len(translated_parts)
+            if not translated_parts:
+                existing = self._project.load_translation_result()
+                if existing:
+                    # Backward-compatible resume for projects without per-page cache
+                    import re
+
+                    parts = re.split(r"\n\n(?=--- Page \d+ ---)", existing)
+                    translated_parts = list(parts)
+                    start_page = len(translated_parts)
 
         self._set_project_status(ProjectStatus.TRANSLATING)
         self._set_processing(True, show_pause=True)
 
         # Persist settings
         self._project.translation_backend = self._backend_radio.value or "lmstudio"
-        self._project.translation_target_language = self._target_language.value or "Portuguese"
-        self._project.translation_lmstudio_url = self._lmstudio_url.value or "http://localhost:1234/v1"
-        self._project.translation_lmstudio_model = self._lmstudio_model.value or "local-model"
+        self._project.translation_target_language = (
+            self._target_language.value or "Portuguese"
+        )
+        self._project.translation_lmstudio_url = (
+            self._lmstudio_url.value or "http://localhost:1234/v1"
+        )
+        self._project.translation_lmstudio_model = (
+            self._lmstudio_model.value or "local-model"
+        )
         self._project.save()
 
         try:
@@ -752,6 +802,12 @@ class OCRApp:
             total = len(pages)
             self._project.translation_total_pages = total
             self._project.save()
+
+            if start_page > total:
+                start_page = total
+                translated_parts = translated_parts[:total]
+
+            preview_every = 3
 
             for i, page_text in enumerate(pages, 1):
                 if i - 1 < start_page:
@@ -765,49 +821,66 @@ class OCRApp:
                 self._set_status(f"Translating page {i}/{total}...")
                 self._progress_bar.value = (i - 1) / total
                 self.page.update()
-                self.page.update()
 
                 page_trans_start = time.perf_counter()
                 page_translation: str | None = None
                 for attempt in range(3):
                     try:
-                        result = await backend.translate(page_text, target_language=target_lang)
+                        result = await backend.translate(
+                            page_text, target_language=target_lang
+                        )
                         page_translation = result.translated_text
                         break
                     except Exception as exc:
                         if attempt < 2:
-                            wait_time = 2 ** attempt
+                            wait_time = 2**attempt
                             self._set_status(
                                 f"Page {i} failed, retrying in {wait_time}s... ({attempt + 1}/3)"
                             )
                             self.page.update()
-                            await asyncio.sleep(wait_time)
+                            await self._sleep_with_pause(wait_time)
+                            if self._cancel_requested:
+                                break
                         else:
                             logger.warning("Page %d failed: %s", i, exc)
-                
+
+                if self._cancel_requested:
+                    break
+
                 page_trans_duration = time.perf_counter() - page_trans_start
-                logger.info("[INFO] Translation page %d/%d took %.2fs", i, total, page_trans_duration)
+                logger.info(
+                    "[INFO] Translation page %d/%d took %.2fs",
+                    i,
+                    total,
+                    page_trans_duration,
+                )
 
                 if page_translation:
                     translated_parts.append(page_translation)
+                    self._project.save_translation_page(i - 1, page_translation)
                 else:
-                    translated_parts.append(
-                        f"[PAGE {i} TRANSLATION FAILED — original text below]\n\n{page_text}"
-                    )
+                    fallback_page = f"[PAGE {i} TRANSLATION FAILED — original text below]\n\n{page_text}"
+                    translated_parts.append(fallback_page)
+                    self._project.save_translation_page(i - 1, fallback_page)
 
-                self._translated_text = "\n\n".join(translated_parts)
-                self._project.save_translation_result(self._translated_text)
                 self._project.translation_completed_pages = len(translated_parts)
                 self._project.touch()
                 self._project.save()
 
-                self._translation_text_field.value = self._translated_text
-                self._translation_char_count.value = f"{len(self._translated_text):,} characters"
-                self._btn_save_translation.disabled = False
-                self.page.update()
+                if (len(translated_parts) % preview_every == 0) or (i == total):
+                    self._translated_text = "\n\n".join(translated_parts)
+                    self._project.save_translation_result(self._translated_text)
+                    self._translation_text_field.value = self._translated_text
+                    self._translation_char_count.value = (
+                        f"{len(self._translated_text):,} characters"
+                    )
+                    self._btn_save_translation.disabled = False
+                    self.page.update()
 
                 if i < total:
-                    await asyncio.sleep(1)
+                    await self._sleep_with_pause(0.25)
+                    if self._cancel_requested:
+                        break
 
             if self._cancel_requested:
                 return
@@ -816,6 +889,13 @@ class OCRApp:
             self._set_project_status(ProjectStatus.DONE)
             self._set_status("Done!")
             self._progress_bar.value = 1.0
+            self._translated_text = "\n\n".join(translated_parts)
+            self._project.save_translation_result(self._translated_text)
+            self._translation_text_field.value = self._translated_text
+            self._translation_char_count.value = (
+                f"{len(self._translated_text):,} characters"
+            )
+            self._btn_save_translation.disabled = False
             self._show_snackbar("Translation complete!")
 
         except Exception as exc:
@@ -828,7 +908,6 @@ class OCRApp:
             self._set_processing(False, show_pause=False)
             self._refresh_action_buttons()
             self.page.update()
-
 
     async def _pause(self) -> None:
         """Signal the running coroutine to pause at the next checkpoint."""
@@ -844,7 +923,6 @@ class OCRApp:
         self._refresh_action_buttons()
         self._set_status("Paused. You can resume any time.")
         self.page.update()
-
 
     def _create_translation_backend(self):
         backend_value = self._project.translation_backend
@@ -876,6 +954,18 @@ class OCRApp:
     def _set_status(self, msg: str) -> None:
         self._status_text.value = msg
         self.page.update()
+
+    async def _sleep_with_pause(self, seconds: float) -> None:
+        """Sleep in short slices so pause/cancel reacts quickly."""
+        end = time.perf_counter() + max(0.0, seconds)
+        while True:
+            if self._cancel_requested:
+                return
+            remaining = end - time.perf_counter()
+            if remaining <= 0:
+                return
+            await self._pause_event.wait()
+            await asyncio.sleep(min(0.2, remaining))
 
     def _show_error(self, msg: str) -> None:
         dialog = ft.AlertDialog(
