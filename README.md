@@ -171,6 +171,47 @@ python main.py
 
 The desktop application will launch in a new Flet window.
 
+## Building the App
+
+To create a standalone executable for your platform, use the `flet build` command.
+
+### Linux
+
+Ensure you have the necessary development tools and libraries for Flutter/Flet.
+
+```bash
+# Build as a directory (faster)
+flet build linux
+
+# Build as an executable bundle
+flet build linux --bundle
+```
+
+The output will be in the `build/linux` directory.
+
+### Windows (requires Windows)
+
+```bash
+flet build windows
+```
+
+### macOS (requires macOS)
+
+```bash
+flet build macos
+```
+
+### Options
+
+- `--app-name`: Custom name for the executable.
+- `--app-version`: Version string.
+- `--product-name`: Display name.
+
+Example:
+```bash
+flet build linux --app-name lumos --product-name "Lumos OCR"
+```
+
 ### 💡 Tips for Large Documents
 
 - Use **Pause** to stop a long run and continue later — progress is saved after every page.
